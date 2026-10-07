@@ -1,0 +1,22 @@
+name: Deploy Policy
+on:
+  push:
+    branches: [main]
+permissions:
+  id-token: write   # required for OIDC
+  contents: read
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - run: |
+          az policy definition create --name demo-policy --rules policy.rules.json --params policy.params.json --mode All
+          az policy assignment create --name demo-assignment --policy demo-policy \
+            --mi-system-assigned --location westeurope \
+            --identity-scope "/subscriptions/${{ vars.AZURE_SUBSCRIPTION_ID }}"
