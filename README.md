@@ -14,21 +14,21 @@ pipeline never holds `roleAssignments/write`, but code it deploys controls what 
 identity does. This is the privilege-laundering seam the demo exploits.
 
 ## Folder structure
-```
-infra/
-  pipeline-identity.bicep       secure baseline: UAMI + FIC + least-privilege role
-  pipeline-identity.VULNERABLE.bicep   misconfigured FIC variant (wildcard subject, no env protection)
-  policy-definition.bicep       custom deployIfNotExists policy definition ("legit" content)
-  policy-assignment.bicep       assignment + its own identity + minimal explicit role grant
-.github/workflows/
-  deploy-policy.yml             secure baseline pipeline
-  deploy-policy.VULNERABLE.yml  demo pipeline with the misconfiguration enabled
-attack/
-  malicious-template-injection.json   the "attacker PR" diff payload
-  attack-walkthrough.md               step-by-step live-demo script
-```
 
-## Two configurations to contrast on stage
+What's in `files/azure-identity-demo/` (saved to your session storage)
+
+| File | Purpose |
+| --- | --- |
+| `infra/pipeline-identity.bicep` | **Secure baseline**: UAMI + FIC scoped to `environment:production` (exact match), Resource Policy Contributor only |
+| `infra/pipeline-identity.VULNERABLE.bicep` | **Demo variant**: wildcard FIC subject (`ref:refs/heads/*`), Contributor at management-group scope |
+| `infra/policy-definition.bicep` | Realistic custom `deployIfNotExists` policy (diagnostic settings) |
+| `infra/policy-assignment.bicep` / `.VULNERABLE.bicep` | Contrast: explicit minimal remediation role vs. broad auto-granted Contributor |
+| `.github/workflows/deploy-policy.yml` / `.VULNERABLE.yml` | Secure pipeline (required reviewers, pinned actions) vs. vulnerable one (any branch, mutable action tag) |
+| `attack/malicious-template-injection.json` | The attacker payload — injects an Owner role assignment, laundered through the remediation identity |
+| `attack/attack-walkthrough.md` | Full live-demo script: setup, attack steps, reset commands, closing mitigation slide |
+
+
+## Two configurations to contrast
 
 | | Secure baseline | Vulnerable demo variant |
 |---|---|---|
@@ -38,7 +38,7 @@ attack/
 | Remediation MI role grant | Explicit, minimal (e.g. `Log Analytics Contributor`), scoped to target RG, reviewed in PR diff | `Contributor` at management group scope, auto-expanded by a "helper" policy initiative |
 | Branch protection on policy repo | Required PR review, no direct push to `main` | Direct push allowed / stale unpinned third-party Action |
 
-Run the secure baseline first to show "this looks airtight — OIDC, no secrets, least privilege."
-Then switch to the vulnerable variant to show how a single loosened control (wildcard FIC subject,
-or an unpinned/compromised Action in the workflow) reopens the exact same escalation path from
-earlier in the talk — this time laundered through a CI/CD pipeline instead of a human.
+1. Run the secure baseline first to show "this looks airtight, OIDC, no secrets, least privilege."
+2. Switch to the vulnerable variant to show how a single loosened control (wildcard FIC subject,
+   or an unpinned/compromised Action in the workflow) reopens the exact same escalation path from
+   earlier in the talk this time laundered through a CI/CD pipeline instead of a human.
