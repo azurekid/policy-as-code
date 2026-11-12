@@ -44,19 +44,38 @@
   <script src="./vendor/addon-fit/addon-fit.js"></script>
   <script>
     const status = document.getElementById('status');
-    const term = new Terminal({ cursorBlink: true, fontSize: 14, fontFamily: 'Menlo, Consolas, monospace' });
-    const fitAddon = new FitAddon.FitAddon();
-    term.loadAddon(fitAddon);
-    term.open(document.getElementById('terminal'));
-    fitAddon.fit();
+    let connectionFailed = false;
+    let connectionTimeout;
+    function connectionError(message, error) {
+      connectionFailed = true;
+      clearTimeout(connectionTimeout);
+      status.textContent = message;
+      status.className = 'disconnected';
+      console.error(message, error);
+    }
 
-    const ws = new WebSocket(`${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}`);
-    ws.onopen = () => { status.textContent = 'Connected'; status.className = 'connected'; term.focus(); ws.send(JSON.stringify({ type: 'resize', cols: term.cols, rows: term.rows })); };
-    ws.onclose = () => { status.textContent = 'Disconnected'; status.className = 'disconnected'; };
-    ws.onmessage = (e) => term.write(e.data);
-    term.onData((data) => { if (ws.readyState === WebSocket.OPEN) ws.send(data); });
-    term.onResize((size) => { if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'resize', cols: size.cols, rows: size.rows })); });
-    new ResizeObserver(() => fitAddon.fit()).observe(document.getElementById('terminal'));
+    try {
+      const term = new Terminal({ cursorBlink: true, fontSize: 14, fontFamily: 'Menlo, Consolas, monospace' });
+      const fitAddon = new FitAddon.FitAddon();
+      term.loadAddon(fitAddon);
+      term.open(document.getElementById('terminal'));
+      fitAddon.fit();
+
+      const ws = new WebSocket(`${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}`);
+      connectionTimeout = setTimeout(() => {
+        connectionError('Connection timed out. Reload to reconnect.');
+        ws.close();
+      }, 15000);
+      ws.onopen = () => { clearTimeout(connectionTimeout); status.textContent = 'Connected'; status.className = 'connected'; term.focus(); ws.send(JSON.stringify({ type: 'resize', cols: term.cols, rows: term.rows })); };
+      ws.onerror = (error) => { connectionError('Connection failed. Reload to reconnect.', error); };
+      ws.onclose = () => { clearTimeout(connectionTimeout); if (!connectionFailed) { status.textContent = 'Disconnected'; status.className = 'disconnected'; } };
+      ws.onmessage = (e) => term.write(e.data);
+      term.onData((data) => { if (ws.readyState === WebSocket.OPEN) ws.send(data); });
+      term.onResize((size) => { if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'resize', cols: size.cols, rows: size.rows })); });
+      new ResizeObserver(() => fitAddon.fit()).observe(document.getElementById('terminal'));
+    } catch (error) {
+      connectionError(`Terminal initialization failed: ${error.message}`, error);
+    }
   </script>
 </body>
 </html>
