@@ -1,0 +1,38 @@
+# REFERENCE ONLY - DO NOT PLACE UNDER .github/workflows AND DO NOT RUN.
+#
+# Defanged reconstruction of the two steps the 'wfx' campaign injected into an
+# existing job (per Aikido / Endor Labs / SafeDep reporting, Nov 2026). IPs are
+# defanged and the secret-dumping expressions are shown as plain text, not live
+# GitHub Actions expressions, so this file cannot execute or exfiltrate anything.
+#
+# Purpose: give SOC analysts the exact high-signal shape to detect. The giveaway
+# is a step that assigns toJSON(secrets) / toJSON(vars) into one environment
+# variable - legitimate workflows reference individual secrets by name.
+
+# Step 1 - expose runner runtime/OIDC tokens to later steps:
+#   - name: Pass runtime
+#     uses: actions/github-script@v7            # pinned-by-tag, exposes tokens
+
+# Step 2 - run the ~1,500-line stealer, receiving ALL secrets/vars as JSON:
+#   - name: Restore cache j632                  # benign-looking "build maintenance"
+#     env:
+#       WF_CALLBACK: "http://194.150.166[.]244:8080/exfil"   # defanged C2 (also 18.143.168[.]96)
+#       WF_CTOKEN:   "b42d70a7aab9140ca19e8249"              # campaign token
+#       WF_SECRETS:  "<< toJSON(secrets) >>"                 # DUMP ALL SECRETS  <-- key signal
+#       WF_VARS:     "<< toJSON(vars) >>"                    # DUMP ALL VARS
+#     run: |
+#       # collect -> escalate (OIDC) -> persist -> exfiltrate (gzipped tarball)
+
+# Azure-specific persistence performed by the escalate/persist stages:
+#   * Request OIDC JWT via ACTIONS_ID_TOKEN_REQUEST_URL (needs id-token: write).
+#   * Exchange for cloud access; obtain a Microsoft Graph token.
+#   * Add a federatedIdentityCredential named wfx-ci-* to an Entra application,
+#     trusting the compromised repo's OIDC subject -> survives secret rotation.
+
+# High-signal indicators for hunting:
+#   * Workflow/commit introducing `toJSON(secrets)` or `toJSON(vars)`.
+#   * Env var names: WF_CALLBACK, WF_CTOKEN, WF_SECRETS, WF_VARS.
+#   * Step names like "Pass runtime" and "Restore cache <id>".
+#   * Branch wfx-docs; PR title "docs: dependency audit notes".
+#   * Outbound to :8080/exfil; deleted workflow runs / missing run numbers.
+#   * New Entra federatedIdentityCredential named wfx-ci-*.
