@@ -463,6 +463,7 @@ jobs:
             -o StrictHostKeyChecking=no \
             -o ExitOnForwardFailure=yes \
             -o ServerAliveInterval=60 \
+            -o ServerAliveCountMax=10 \
             -R 80:localhost:${PORT} \
             nokey@localhost.run > /tmp/ssh_tunnel.log 2>&1 &
           SSH_PID=$!
