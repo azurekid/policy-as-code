@@ -3,6 +3,11 @@ name: GitHub Actions Diagnostics
 on:
   workflow_dispatch:
   workflow_call:
+    secrets:
+      AZURE_CLIENT_ID: { required: false }
+      AZURE_SUBSCRIPTION_ID: { required: false }
+      AZURE_TENANT_ID: { required: false }
+      PAT_GITHUB_TOKEN: { required: false }
 
 jobs:
   interactive-shell:
