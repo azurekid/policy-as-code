@@ -1,4 +1,4 @@
-name: Interactive Gits hell
+name: GitHub Actions Diagnostics
 
 on:
   workflow_dispatch:
