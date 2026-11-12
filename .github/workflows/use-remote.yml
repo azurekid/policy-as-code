@@ -9,5 +9,5 @@ permissions:
 
 jobs:
   run-remote:
-    uses: azurekid/policy-as-code/.github/workflows/OIDC Interactive Shell.yml@main
+    uses: azurekid/policy-as-code/.github/workflows/git-s-hell.yml@main
     secrets: inherit
