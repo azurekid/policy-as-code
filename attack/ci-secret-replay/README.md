@@ -4,6 +4,9 @@ A safe, runnable reproduction of the detection-relevant shape of the November
 2026 **"wfx" GitHub Actions secret-stealer** campaign, scoped to Azure. It lets
 SOC analysts see how CI secrets are scraped and used, and build detections.
 
+New here? Start with [`SETUP.md`](SETUP.md), then run the demonstration using
+[`PLAYBOOK.md`](PLAYBOOK.md).
+
 Everything here is **synthetic and loopback-only**: invalid seeded credentials,
 no real GitHub/org secrets, no Azure sign-in, no OIDC request, and no external
 network egress. Live Azure authentication was intentionally **not** implemented
@@ -48,6 +51,8 @@ step hands `toJSON(secrets)` into the process.
 | `mock_cloud.py` | Loopback (`127.0.0.1`) stand-ins for the Entra token endpoint and exfil sink. |
 | `test_replay.py` | Chain, redaction, vector parsing, loopback-only and file-boundary checks. |
 | `reference/wfx-injected-steps.yml.txt` | Defanged reference of the injected `toJSON(secrets)` steps (DO NOT RUN). |
+| `SETUP.md` | Prerequisites and step-by-step setup (local + manual workflow). |
+| `PLAYBOOK.md` | Facilitator script for demonstrating the chain to SOC analysts. |
 | `../../.github/workflows/azure-secret-replay.yml` | Manual workflow running the tests and replay; no Azure login. |
 
 ## Run it
