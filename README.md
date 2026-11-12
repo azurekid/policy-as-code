@@ -1,6 +1,14 @@
 # Demo: Stealing & Abusing Azure Identities via Policy-as-Code (GitHub OIDC)
 
 ## Scenario
+
+For the separate synthetic CI secret-stealer SOC exercise, see
+[`attack/ci-secret-replay/`](attack/ci-secret-replay/README.md). It reproduces the
+November 2026 "wfx" scrape -> use -> exfiltrate chain (including the
+`toJSON(secrets)` vector) using invalid seeded credentials and loopback-only
+calls — no real Azure authentication or external egress — plus GitHub/Entra
+detection use-cases.
+
 A platform team deploys Azure Policy (deployIfNotExists / modify) through a GitHub Actions
 pipeline. The pipeline authenticates to Azure using a **user-assigned managed identity (UAMI)**
 trusted via a **federated identity credential (FIC)** — no client secret, no stored credential.
